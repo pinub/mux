@@ -1,4 +1,4 @@
-# mux [![Build Status](https://semaphoreci.com/api/v1/dabio/mux/branches/master/shields_badge.svg)](https://semaphoreci.com/dabio/mux)
+# mux [![Build Status](https://semaphoreci.com/api/v1/dabio/mux/branches/master/shields_badge.svg)](https://semaphoreci.com/dabio/mux) [![GoDoc](https://godoc.org/github.com/pinub/mux?status.svg)](https://godoc.org/github.com/pinub/mux)
 
 mux is a high performance HTTP request router, also called multiplexer or just _mux_.
 
