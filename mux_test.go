@@ -160,6 +160,22 @@ func TestMethodNotAllowedDisabled(t *testing.T) {
 	}
 }
 
+func TestFormMethodFix(t *testing.T) {
+	m := New()
+	m.Get("/foo", func(w http.ResponseWriter, r *http.Request) {})
+	m.Put("/foo", func(w http.ResponseWriter, r *http.Request) {})
+
+	res := httptest.NewRecorder()
+	m.ServeHTTP(res, newRequest(
+		"POST",
+		"/foo",
+		strings.NewReader("<form method=post><input name=_method value=put></form>"),
+	))
+	if res.Code != http.StatusOK {
+		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusOK)
+	}
+}
+
 func newRequest(method string, path string, body io.Reader) *http.Request {
 	req, err := http.NewRequest(method, path, body)
 	if err != nil {
