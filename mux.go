@@ -45,7 +45,6 @@
 package mux
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 )
@@ -127,7 +126,6 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	method := req.Method
 
 	// fix for forms with given _method value
-	fmt.Println(w, req.FormValue("_method"))
 	if formMethod := req.FormValue("_method"); formMethod != "" {
 		method = strings.ToUpper(formMethod)
 	}
