@@ -44,7 +44,10 @@
 //  /foo            doesn't match
 package mux
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 // Router is a http.Handler used to dispatch request to different handler
 // functions with routes.
@@ -121,6 +124,13 @@ func (r *Router) add(method string, path string, h http.HandlerFunc) {
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	path := req.URL.Path
 	method := req.Method
+
+	// fix for forms with given _method value
+	if method == http.MethodPost {
+		if formMethod := req.FormValue("_method"); formMethod != "" {
+			method = strings.ToUpper(formMethod)
+		}
+	}
 
 	if h, ok := r.routes[method+path]; ok {
 		h.ServeHTTP(w, req)

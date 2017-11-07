@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -157,6 +158,28 @@ func TestMethodNotAllowedDisabled(t *testing.T) {
 	got := res.Header().Get("Allow")
 	if got != "" {
 		t.Errorf("got Allow header %v; want \"\"", got)
+	}
+}
+
+func TestFormMethodFix(t *testing.T) {
+	m := New()
+	m.Get("/foo", func(w http.ResponseWriter, r *http.Request) {})
+	m.Post("/foo", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+	m.Put("/foo", func(w http.ResponseWriter, r *http.Request) {})
+
+	res := httptest.NewRecorder()
+	req := newRequest(
+		"POST",
+		"/foo",
+		strings.NewReader(url.Values{"_method": {"put"}}.Encode()),
+	)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	m.ServeHTTP(res, req)
+	if res.Code != http.StatusOK {
+		t.Errorf("for path %q: got code %d; want %d", "/foo", res.Code, http.StatusOK)
 	}
 }
 
