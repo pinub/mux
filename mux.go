@@ -126,8 +126,10 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	method := req.Method
 
 	// fix for forms with given _method value
-	if formMethod := req.FormValue("_method"); formMethod != "" {
-		method = strings.ToUpper(formMethod)
+	if method == http.MethodPost {
+		if formMethod := req.FormValue("_method"); formMethod != "" {
+			method = strings.ToUpper(formMethod)
+		}
 	}
 
 	if h, ok := r.routes[method+path]; ok {
