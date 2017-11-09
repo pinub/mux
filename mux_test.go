@@ -183,6 +183,45 @@ func TestFormMethodFix(t *testing.T) {
 	}
 }
 
+func TestOtherMethods(t *testing.T) {
+	m := New()
+	m.Delete("/bar", func(w http.ResponseWriter, r *http.Request) {})
+	m.Options("/bar", func(w http.ResponseWriter, r *http.Request) {})
+	m.Patch("/bar", func(w http.ResponseWriter, r *http.Request) {})
+
+	res := httptest.NewRecorder()
+	m.ServeHTTP(res, newRequest("DELETE", "/bar", nil))
+	if res.Code != http.StatusOK {
+		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusMethodNotAllowed)
+	}
+
+	m.ServeHTTP(res, newRequest("OPTIONS", "/bar", nil))
+	if res.Code != http.StatusOK {
+		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusMethodNotAllowed)
+	}
+
+	m.ServeHTTP(res, newRequest("PATCH", "/bar", nil))
+	if res.Code != http.StatusOK {
+		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusMethodNotAllowed)
+	}
+
+	m.ServeHTTP(res, newRequest("GET", "/bar", nil))
+	if res.Code != http.StatusMethodNotAllowed {
+		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusMethodNotAllowed)
+	}
+}
+
+func TestNoBeginningSlash(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("the code did not panic")
+		}
+	}()
+
+	m := New()
+	m.Delete("bar", func(w http.ResponseWriter, r *http.Request) {})
+}
+
 func newRequest(method string, path string, body io.Reader) *http.Request {
 	req, err := http.NewRequest(method, path, body)
 	if err != nil {
