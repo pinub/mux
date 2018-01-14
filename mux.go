@@ -110,6 +110,11 @@ func (r *Router) Patch(path string, h http.HandlerFunc) {
 }
 
 func (r *Router) add(method string, path string, h http.HandlerFunc) {
+	r.Handler(method, path, h)
+}
+
+// Handler registers a new request Handler with the given  path an method.
+func (r *Router) Handler(method string, path string, h http.Handler) {
 	if path[0] != '/' {
 		panic("Path must begin with '/' in path '" + path + "'")
 	}

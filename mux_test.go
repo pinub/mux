@@ -192,17 +192,17 @@ func TestOtherMethods(t *testing.T) {
 	res := httptest.NewRecorder()
 	m.ServeHTTP(res, newRequest("DELETE", "/bar", nil))
 	if res.Code != http.StatusOK {
-		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusMethodNotAllowed)
+		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusOK)
 	}
 
 	m.ServeHTTP(res, newRequest("OPTIONS", "/bar", nil))
 	if res.Code != http.StatusOK {
-		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusMethodNotAllowed)
+		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusOK)
 	}
 
 	m.ServeHTTP(res, newRequest("PATCH", "/bar", nil))
 	if res.Code != http.StatusOK {
-		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusMethodNotAllowed)
+		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusOK)
 	}
 
 	m.ServeHTTP(res, newRequest("GET", "/bar", nil))
@@ -220,6 +220,24 @@ func TestNoBeginningSlash(t *testing.T) {
 
 	m := New()
 	m.Delete("bar", func(w http.ResponseWriter, r *http.Request) {})
+}
+
+func TestHandler(t *testing.T) {
+	m := New()
+	m.Handler("GET", "/foobar", http.RedirectHandler("/foo", 300))
+	m.Handler("POST", "/foobar", http.RedirectHandler("/foo", 307))
+
+	rec := httptest.NewRecorder()
+	m.ServeHTTP(rec, newRequest("GET", "/foobar", nil))
+	if rec.Code != 300 {
+		t.Errorf("for path %q: got code %d; want %d", "/foobar", rec.Code, 300)
+	}
+
+	rec = httptest.NewRecorder()
+	m.ServeHTTP(rec, newRequest("POST", "/foobar", nil))
+	if want := 307; rec.Code != want {
+		t.Errorf("for path %q: got code %d; want %d", "/foobar", rec.Code, want)
+	}
 }
 
 func newRequest(method string, path string, body io.Reader) *http.Request {
