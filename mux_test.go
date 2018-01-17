@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-var h http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+var h = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 
 func TestRoutes(t *testing.T) {
 	t.Parallel()
