@@ -9,7 +9,10 @@ import (
 	"testing"
 )
 
+var h http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+
 func TestRoutes(t *testing.T) {
+	t.Parallel()
 	for i, tt := range []struct {
 		method string
 		path   string
@@ -20,7 +23,7 @@ func TestRoutes(t *testing.T) {
 		{http.MethodPost, "/", 200},
 	} {
 		m := New()
-		m.add(tt.method, tt.path, func(w http.ResponseWriter, r *http.Request) {})
+		m.add(tt.method, tt.path, h)
 
 		res := httptest.NewRecorder()
 		m.ServeHTTP(res, newRequest(tt.method, tt.path, nil))
@@ -32,8 +35,8 @@ func TestRoutes(t *testing.T) {
 
 func TestNotFound(t *testing.T) {
 	m := New()
-	m.Get("/foo", func(w http.ResponseWriter, r *http.Request) {})
-	m.Get("/bar", func(w http.ResponseWriter, r *http.Request) {})
+	m.Get("/foo", h)
+	m.Get("/bar", h)
 
 	for _, path := range []string{"/foobar", "/test", "/another/url"} {
 		res := httptest.NewRecorder()
@@ -46,10 +49,10 @@ func TestNotFound(t *testing.T) {
 
 func TestNotFoundCustomHandler(t *testing.T) {
 	m := New()
-	m.NotFound = func(w http.ResponseWriter, r *http.Request) {
+	m.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(123)
-	}
-	m.Get("/foo", func(w http.ResponseWriter, r *http.Request) {})
+	})
+	m.Get("/foo", h)
 	res := httptest.NewRecorder()
 	m.ServeHTTP(res, newRequest("GET", "/bar", nil))
 	if res.Code != 123 {
@@ -59,7 +62,6 @@ func TestNotFoundCustomHandler(t *testing.T) {
 
 func TestRedirectTrailingSlash(t *testing.T) {
 	m := New()
-	h := func(w http.ResponseWriter, r *http.Request) {}
 
 	codes := map[int]bool{
 		http.StatusPermanentRedirect: true,
@@ -99,7 +101,6 @@ func TestRedirectTrailingSlash(t *testing.T) {
 func TestRedirectTrainlingSlashDisabled(t *testing.T) {
 	m := New()
 	m.RedirectTrailingSlash = false
-	h := func(w http.ResponseWriter, r *http.Request) {}
 
 	for i, tt := range []struct {
 		method   string
@@ -127,8 +128,8 @@ func TestRedirectTrainlingSlashDisabled(t *testing.T) {
 
 func TestMethodNotAllowed(t *testing.T) {
 	m := New()
-	m.Get("/bar", func(w http.ResponseWriter, r *http.Request) {})
-	m.Post("/bar", func(w http.ResponseWriter, r *http.Request) {})
+	m.Get("/bar", h)
+	m.Post("/bar", h)
 
 	res := httptest.NewRecorder()
 	m.ServeHTTP(res, newRequest("PUT", "/bar", nil))
@@ -146,8 +147,8 @@ func TestMethodNotAllowed(t *testing.T) {
 func TestMethodNotAllowedDisabled(t *testing.T) {
 	m := New()
 	m.HandleMethodNotAllowed = false
-	m.Get("/bar", func(w http.ResponseWriter, r *http.Request) {})
-	m.Post("/bar", func(w http.ResponseWriter, r *http.Request) {})
+	m.Get("/bar", h)
+	m.Post("/bar", h)
 
 	res := httptest.NewRecorder()
 	m.ServeHTTP(res, newRequest("PUT", "/bar", nil))
@@ -163,11 +164,11 @@ func TestMethodNotAllowedDisabled(t *testing.T) {
 
 func TestFormMethodFix(t *testing.T) {
 	m := New()
-	m.Get("/foo", func(w http.ResponseWriter, r *http.Request) {})
-	m.Post("/foo", func(w http.ResponseWriter, r *http.Request) {
+	m.Get("/foo", h)
+	m.Post("/foo", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-	})
-	m.Put("/foo", func(w http.ResponseWriter, r *http.Request) {})
+	}))
+	m.Put("/foo", h)
 
 	res := httptest.NewRecorder()
 	req := newRequest(
@@ -185,9 +186,9 @@ func TestFormMethodFix(t *testing.T) {
 
 func TestOtherMethods(t *testing.T) {
 	m := New()
-	m.Delete("/bar", func(w http.ResponseWriter, r *http.Request) {})
-	m.Options("/bar", func(w http.ResponseWriter, r *http.Request) {})
-	m.Patch("/bar", func(w http.ResponseWriter, r *http.Request) {})
+	m.Delete("/bar", h)
+	m.Options("/bar", h)
+	m.Patch("/bar", h)
 
 	res := httptest.NewRecorder()
 	m.ServeHTTP(res, newRequest("DELETE", "/bar", nil))
@@ -219,25 +220,7 @@ func TestNoBeginningSlash(t *testing.T) {
 	}()
 
 	m := New()
-	m.Delete("bar", func(w http.ResponseWriter, r *http.Request) {})
-}
-
-func TestHandler(t *testing.T) {
-	m := New()
-	m.Handler("GET", "/foobar", http.RedirectHandler("/foo", 300))
-	m.Handler("POST", "/foobar", http.RedirectHandler("/foo", 307))
-
-	rec := httptest.NewRecorder()
-	m.ServeHTTP(rec, newRequest("GET", "/foobar", nil))
-	if rec.Code != 300 {
-		t.Errorf("for path %q: got code %d; want %d", "/foobar", rec.Code, 300)
-	}
-
-	rec = httptest.NewRecorder()
-	m.ServeHTTP(rec, newRequest("POST", "/foobar", nil))
-	if want := 307; rec.Code != want {
-		t.Errorf("for path %q: got code %d; want %d", "/foobar", rec.Code, want)
-	}
+	m.Delete("bar", h)
 }
 
 func newRequest(method string, path string, body io.Reader) *http.Request {

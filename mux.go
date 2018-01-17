@@ -62,9 +62,9 @@ type Router struct {
 	// path, but not the requested method exists. Default: true
 	HandleMethodNotAllowed bool
 
-	// Custom http.HandlerFunction which is called when no handler was found
-	// for the requested route. Defaults: http.NotFound.
-	NotFound http.HandlerFunc
+	// Custom http.Handler which is called when no handler was found for the
+	// requested route. Defaults: http.NotFound.
+	NotFound http.Handler
 }
 
 // New initializes the Router.
@@ -80,41 +80,36 @@ func New() *Router {
 var _ http.Handler = New()
 
 // Get registers a new request handle for the GET method and the given path.
-func (r *Router) Get(path string, h http.HandlerFunc) {
+func (r *Router) Get(path string, h http.Handler) {
 	r.add(http.MethodGet, path, h)
 }
 
 // Post registers a new request handle for the POST method and the given path.
-func (r *Router) Post(path string, h http.HandlerFunc) {
+func (r *Router) Post(path string, h http.Handler) {
 	r.add(http.MethodPost, path, h)
 }
 
 // Put registers a new request handle for the PUT method and the given path.
-func (r *Router) Put(path string, h http.HandlerFunc) {
+func (r *Router) Put(path string, h http.Handler) {
 	r.add(http.MethodPut, path, h)
 }
 
 // Delete registers a new request handle for the DELETE method and the given path.
-func (r *Router) Delete(path string, h http.HandlerFunc) {
+func (r *Router) Delete(path string, h http.Handler) {
 	r.add(http.MethodDelete, path, h)
 }
 
 // Options registers a new request handle for the OPTIONS method and the given path.
-func (r *Router) Options(path string, h http.HandlerFunc) {
+func (r *Router) Options(path string, h http.Handler) {
 	r.add(http.MethodOptions, path, h)
 }
 
 // Patch registers a new request handle for the PATCH method and the given path.
-func (r *Router) Patch(path string, h http.HandlerFunc) {
+func (r *Router) Patch(path string, h http.Handler) {
 	r.add(http.MethodPatch, path, h)
 }
 
-func (r *Router) add(method string, path string, h http.HandlerFunc) {
-	r.Handler(method, path, h)
-}
-
-// Handler registers a new request Handler with the given  path an method.
-func (r *Router) Handler(method string, path string, h http.Handler) {
+func (r *Router) add(method string, path string, h http.Handler) {
 	if path[0] != '/' {
 		panic("Path must begin with '/' in path '" + path + "'")
 	}
