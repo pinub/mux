@@ -3,35 +3,34 @@
 //
 // Example:
 //
-//  package main
+// package main
 //
-//  import (
-//  	"fmt"
-//  	"log"
-//  	"net/http"
+// import (
+// 	"log"
+// 	"net/http"
 //
-//  	"github.com/pinub/mux"
-//  )
+// 	"github.com/pinub/mux"
+// )
 //
-//  func index() http.Handler {
-//  	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//  		fmt.Fprint(w, "Welcome!\n")
-//  	})
-//  }
+// func index() http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		w.Write([]byte(`Welcome!`))
+// 	}
+// }
 //
-//  func hello() http.Handler {
-//  	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//  		fmt.Fprint(w, "Hello\n")
-//  	})
-//  }
+// func hello() http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		w.Write([]byte(`Welcome!`))
+// 	}
+// }
 //
-//  func main() {
-//  	m := mux.New()
-//  	m.Get("/", index())
-//  	m.Get("/hello", hello())
+// func main() {
+// 	m := mux.New()
+// 	m.Get("/", index())
+// 	m.Get("/hello", hello())
 //
-//  	log.Fatal(http.ListenAndServe(":8080", m))
-//  }
+// 	log.Fatal(http.ListenAndServe(":8080", m))
+// }
 //
 // The Muxer matches incoming requests by the method and path and delegates
 // to that assiciated handler.
@@ -55,7 +54,7 @@ import (
 
 // Router is a http.Handler used to dispatch request to different handlers.
 type Router struct {
-	routes map[string]http.Handler
+	routes map[string]http.HandlerFunc
 
 	// Enables automatic redirection if the requested path doesn't match but
 	// a handler with a path without the trailing slash exists. Default: true
@@ -67,7 +66,7 @@ type Router struct {
 
 	// Custom http.Handler which is called when no handler was found for the
 	// requested route. Defaults: http.NotFound.
-	NotFound http.Handler
+	NotFound http.HandlerFunc
 }
 
 // New initializes the Router.
@@ -83,42 +82,42 @@ func New() *Router {
 var _ http.Handler = New()
 
 // Get registers a new request handle for the GET method and the given path.
-func (r *Router) Get(path string, h http.Handler) {
+func (r *Router) Get(path string, h http.HandlerFunc) {
 	r.add(http.MethodGet, path, h)
 }
 
 // Post registers a new request handle for the POST method and the given path.
-func (r *Router) Post(path string, h http.Handler) {
+func (r *Router) Post(path string, h http.HandlerFunc) {
 	r.add(http.MethodPost, path, h)
 }
 
 // Put registers a new request handle for the PUT method and the given path.
-func (r *Router) Put(path string, h http.Handler) {
+func (r *Router) Put(path string, h http.HandlerFunc) {
 	r.add(http.MethodPut, path, h)
 }
 
 // Delete registers a new request handle for the DELETE method and the given path.
-func (r *Router) Delete(path string, h http.Handler) {
+func (r *Router) Delete(path string, h http.HandlerFunc) {
 	r.add(http.MethodDelete, path, h)
 }
 
 // Options registers a new request handle for the OPTIONS method and the given path.
-func (r *Router) Options(path string, h http.Handler) {
+func (r *Router) Options(path string, h http.HandlerFunc) {
 	r.add(http.MethodOptions, path, h)
 }
 
 // Patch registers a new request handle for the PATCH method and the given path.
-func (r *Router) Patch(path string, h http.Handler) {
+func (r *Router) Patch(path string, h http.HandlerFunc) {
 	r.add(http.MethodPatch, path, h)
 }
 
-func (r *Router) add(method string, path string, h http.Handler) {
+func (r *Router) add(method string, path string, h http.HandlerFunc) {
 	if path[0] != '/' {
 		panic("Path must begin with '/' in path '" + path + "'")
 	}
 
 	if r.routes == nil {
-		r.routes = make(map[string]http.Handler)
+		r.routes = make(map[string]http.HandlerFunc)
 	}
 	r.routes[method+path] = h
 }

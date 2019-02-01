@@ -1,46 +1,45 @@
-# mux [![Build Status](https://semaphoreci.com/api/v1/dabio/mux/branches/master/shields_badge.svg)](https://semaphoreci.com/dabio/mux) [![GoDoc](https://godoc.org/github.com/pinub/mux?status.svg)](https://godoc.org/github.com/pinub/mux)
+# mux [![GoDoc](https://godoc.org/github.com/pinub/mux?status.svg)](https://godoc.org/github.com/pinub/mux)
 
 mux is a high performance HTTP request router, also called multiplexer or just _mux_.
 
 ## Example
 
-```go
+~~~go
 package main
 
 import (
-    "fmt"
-    "log"
-    "net/http"
+	"log"
+	"net/http"
 
-    "github.com/pinub/mux"
+	"github.com/pinub/mux"
 )
 
-func index() http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprint(w, "Welcome!\n")
-    })
+func index() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`Welcome!`))
+	}
 }
 
-func hello() http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprint(w, "Hello\n")
-    })
+func hello() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`Welcome!`))
+	}
 }
 
 func main() {
-    m := mux.New()
-    m.Get("/", index())
-    m.Get("/hello", hello())
+	m := mux.New()
+	m.Get("/", index())
+	m.Get("/hello", hello())
 
-    log.Fatal(http.ListenAndServe(":8080", m))
+	log.Fatal(http.ListenAndServe(":8080", m))
 }
-```
+~~~
 
 The Muxer matches incoming requests by the method and path and delegates to that assiciated function. Currently GET, POST, PUT, PATCH, DELETE and OPTIONS are supported methods.
 
 Named parameters are not supported.
 
-```
+~~~
 Path: /foo/bar
 
 Requests:
@@ -49,7 +48,7 @@ Requests:
     /foo/bar/       doesn't match, but redirects to /foo/bar
     /foo/foo        doesn't match
     /foo            doesn't match
-```
+~~~
 
 ## Acknowledge
 

@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-var h = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+var h = func(w http.ResponseWriter, r *http.Request) {}
 
 func TestRoutes(t *testing.T) {
 	t.Parallel()
@@ -49,9 +49,9 @@ func TestNotFound(t *testing.T) {
 
 func TestNotFoundCustomHandler(t *testing.T) {
 	m := New()
-	m.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	m.NotFound = func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(123)
-	})
+	}
 	m.Get("/foo", h)
 	res := httptest.NewRecorder()
 	m.ServeHTTP(res, newRequest("GET", "/bar", nil))
