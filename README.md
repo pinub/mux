@@ -11,7 +11,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/pinub/mux"
+	"github.com/pinub/mux/v3"
 )
 
 func index() http.HandlerFunc {

@@ -1,1 +1,1 @@
-module github.com/pinub/mux
+module github.com/pinub/mux/v3
