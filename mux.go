@@ -77,8 +77,14 @@ func New() *Router {
 // Make sure Router conforms with http.Handler interface.
 var _ http.Handler = New()
 
-// Get registers a new request handle for the GET method and the given path.
+// Head registers a new request handle for the HEAD method and the given path.
+func (r *Router) Head(path string, h http.HandlerFunc) {
+	r.add(http.MethodHead, path, h)
+}
+
+// Get registers a new request handle for the GET and HEAD method and the given path.
 func (r *Router) Get(path string, h http.HandlerFunc) {
+	r.add(http.MethodHead, path, h)
 	r.add(http.MethodGet, path, h)
 }
 
@@ -174,6 +180,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (r *Router) allowed(path string) (allowed string) {
 	methods := []string{
+		http.MethodHead,
 		http.MethodGet,
 		http.MethodPost,
 		http.MethodPut,

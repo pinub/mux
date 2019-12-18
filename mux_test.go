@@ -138,7 +138,7 @@ func TestMethodNotAllowed(t *testing.T) {
 	}
 
 	got := res.Header().Get("Allow")
-	want := strings.Join([]string{http.MethodGet, http.MethodPost}, ", ")
+	want := strings.Join([]string{http.MethodHead, http.MethodGet, http.MethodPost}, ", ")
 	if got != want {
 		t.Errorf("got Allow header %v; want %v", got, want)
 	}
@@ -186,24 +186,17 @@ func TestFormMethodFix(t *testing.T) {
 
 func TestOtherMethods(t *testing.T) {
 	m := New()
+	m.Head("/bar", h)
 	m.Delete("/bar", h)
 	m.Options("/bar", h)
 	m.Patch("/bar", h)
 
 	res := httptest.NewRecorder()
-	m.ServeHTTP(res, newRequest("DELETE", "/bar", nil))
-	if res.Code != http.StatusOK {
-		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusOK)
-	}
-
-	m.ServeHTTP(res, newRequest("OPTIONS", "/bar", nil))
-	if res.Code != http.StatusOK {
-		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusOK)
-	}
-
-	m.ServeHTTP(res, newRequest("PATCH", "/bar", nil))
-	if res.Code != http.StatusOK {
-		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusOK)
+	for _, method := range []string{"HEAD", "DELETE", "OPTIONS", "PATCH"} {
+		m.ServeHTTP(res, newRequest(method, "/bar", nil))
+		if res.Code != http.StatusOK {
+			t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusOK)
+		}
 	}
 
 	m.ServeHTTP(res, newRequest("GET", "/bar", nil))
