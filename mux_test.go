@@ -138,7 +138,7 @@ func TestMethodNotAllowed(t *testing.T) {
 	}
 
 	got := res.Header().Get("Allow")
-	want := strings.Join([]string{http.MethodGet, http.MethodPost}, ", ")
+	want := strings.Join([]string{http.MethodHead, http.MethodGet, http.MethodPost}, ", ")
 	if got != want {
 		t.Errorf("got Allow header %v; want %v", got, want)
 	}
