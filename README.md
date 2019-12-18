@@ -1,4 +1,4 @@
-# mux [![GoDoc](https://godoc.org/github.com/pinub/mux?status.svg)](https://godoc.org/github.com/pinub/mux)
+# mux [![GitHub Actions](https://github.com/pinub/mux/workflows/CI/badge.svg)](https://github.com/pinub/mux/actions) [![GoDoc](https://godoc.org/github.com/pinub/mux?status.svg)](https://godoc.org/github.com/pinub/mux)
 
 mux is a high performance HTTP request router, also called multiplexer or just _mux_.
 
