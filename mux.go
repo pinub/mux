@@ -122,6 +122,26 @@ func (r *Router) add(method string, path string, h http.HandlerFunc) {
 		r.routes = make(map[string]http.HandlerFunc)
 	}
 	r.routes[method+path] = h
+
+	// redirect for paths ending with a '/'
+	if r.RedirectTrailingSlash {
+		n := len(path)
+		if n > 1 && path[n-1] != '/' {
+			r.routes[method+path+"/"] = slashRedirect
+		}
+	}
+}
+
+func slashRedirect(w http.ResponseWriter, r *http.Request) {
+	u := *r.URL
+	u.Path = u.Path[:len(u.Path)-1]
+
+	code := http.StatusMovedPermanently
+	if r.Method != http.MethodGet {
+		code = http.StatusPermanentRedirect
+	}
+
+	http.Redirect(w, r, u.String(), code)
 }
 
 // ServeHTTP makes this router implement the http.Handler interface.
@@ -139,21 +159,6 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if h, ok := r.routes[method+path]; ok {
 		h.ServeHTTP(w, req)
 		return
-	}
-
-	// redirect for paths ending with a '/'
-	if r.RedirectTrailingSlash {
-		n := len(path)
-		if n > 1 && path[n-1] == '/' {
-			if _, ok := r.routes[method+path[:n-1]]; ok {
-				code := http.StatusMovedPermanently
-				if method != http.MethodGet {
-					code = http.StatusPermanentRedirect
-				}
-
-				http.Redirect(w, req, path[:n-1], code)
-			}
-		}
 	}
 
 	// method not allowed
