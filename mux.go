@@ -164,7 +164,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// method not allowed
 	if r.HandleMethodNotAllowed {
 		if allowed := r.allowed(path); len(allowed) > 0 {
-			w.Header().Set("Allow", allowed)
+			w.Header().Set("Allow", strings.Join(allowed, ", "))
 			if method != http.MethodOptions {
 				http.Error(w,
 					http.StatusText(http.StatusMethodNotAllowed),
@@ -183,7 +183,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (r *Router) allowed(path string) (allowed string) {
+func (r *Router) allowed(path string) []string {
 	methods := []string{
 		http.MethodHead,
 		http.MethodGet,
@@ -193,16 +193,13 @@ func (r *Router) allowed(path string) (allowed string) {
 		http.MethodPatch,
 		http.MethodOptions,
 	}
+	allowed := []string{}
 
 	for _, method := range methods {
 		if _, ok := r.routes[method+path]; ok {
-			if len(allowed) == 0 {
-				allowed = method
-			} else {
-				allowed += ", " + method
-			}
+			allowed = append(allowed, method)
 		}
 	}
 
-	return
+	return allowed
 }
