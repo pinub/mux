@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/pinub/mux/v3"
 )
@@ -16,20 +15,19 @@ func hello(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`Welcome to hello!`))
 }
 
-// a middleware
-func logging(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		s := time.Now()
-		next.ServeHTTP(w, r)
-
-		log.Printf("%s %s took %s", r.Method, r.URL.String(), time.Since(s))
-	}
+func middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+        log.Printf("%s", "Hello from Middleware")
+		next.ServeHTTP(rw, r)
+	})
 }
 
 func main() {
 	m := mux.New()
-	m.Get("/", logging(index))
-	m.Get("/hello", logging(hello))
+	m.Get("/", index)
+	m.Get("/hello", hello)
+
+	m.Use(middleware)
 
 	log.Fatal(http.ListenAndServe(":8080", m))
 }

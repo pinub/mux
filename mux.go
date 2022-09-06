@@ -3,30 +3,39 @@
 //
 // Example:
 //
-//  package main
+//	package main
 //
-//  import (
-//  	"log"
-//  	"net/http"
+// 	import (
+// 		"log"
+// 		"net/http"
 //
-//  	"github.com/pinub/mux/v3"
-//  )
+// 		"github.com/pinub/mux/v3"
+// 	)
 //
-//  func index(w http.ResponseWriter, r *http.Request) {
-//  	w.Write([]byte(`Welcome to index!`))
-//  }
+// 	func index(w http.ResponseWriter, r *http.Request) {
+// 		w.Write([]byte(`Welcome to index!`))
+// 	}
 //
-//  func hello(w http.ResponseWriter, r *http.Request) {
-//  	w.Write([]byte(`Welcome to hello!`))
-//  }
+// 	func hello(w http.ResponseWriter, r *http.Request) {
+// 		w.Write([]byte(`Welcome to hello!`))
+// 	}
 //
-//  func main() {
-//  	m := mux.New()
-//  	m.Get("/", index)
-//  	m.Get("/hello", hello)
+// 	func middleware(next http.Handler) http.Handler {
+// 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+// 		       log.Printf("%s", "Hello from Middleware")
+// 			next.ServeHTTP(rw, r)
+// 		})
+// 	}
 //
-//  	log.Fatal(http.ListenAndServe(":8080", m))
-//  }
+// 	func main() {
+//		m := mux.New()
+//		m.Get("/", index)
+//		m.Get("/hello", hello)
+//
+//		m.Use(middleware)
+//
+//		log.Fatal(http.ListenAndServe(":8080", m))
+// 	}
 //
 // The Muxer matches incoming requests by the method and path and delegates
 // to that assiciated handler.
@@ -51,6 +60,8 @@ import (
 // Router is a http.Handler used to dispatch request to different handlers.
 type Router struct {
 	routes map[string]http.HandlerFunc
+
+	middlewares []func(http.Handler) http.Handler
 
 	// Enables automatic redirection if the requested path doesn't match but
 	// a handler with a path without the trailing slash exists. Default: true
@@ -144,6 +155,10 @@ func slashRedirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, u.String(), code)
 }
 
+func (r *Router) Use(mw func(http.Handler) http.Handler) {
+	r.middlewares = append(r.middlewares, mw)
+}
+
 // ServeHTTP makes this router implement the http.Handler interface.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	path := req.URL.Path
@@ -157,7 +172,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if h, ok := r.routes[method+path]; ok {
-		h.ServeHTTP(w, req)
+		r.wrap(h).ServeHTTP(w, req)
 		return
 	}
 
@@ -181,6 +196,14 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	} else {
 		http.NotFound(w, req)
 	}
+}
+
+func (r *Router) wrap(handler http.Handler) http.Handler {
+	for _, mw := range r.middlewares {
+		handler = mw(handler)
+	}
+
+	return handler
 }
 
 func (r *Router) allowed(path string) []string {
