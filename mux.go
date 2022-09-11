@@ -5,29 +5,29 @@
 //
 //	package main
 //
-// 	import (
-// 		"log"
-// 		"net/http"
+//	import (
+//		"log"
+//		"net/http"
 //
-// 		"github.com/pinub/mux/v3"
-// 	)
+//		"github.com/pinub/mux/v3"
+//	)
 //
-// 	func index(w http.ResponseWriter, r *http.Request) {
-// 		w.Write([]byte(`Welcome to index!`))
-// 	}
+//	func index(w http.ResponseWriter, r *http.Request) {
+//		w.Write([]byte(`Welcome to index!`))
+//	}
 //
-// 	func hello(w http.ResponseWriter, r *http.Request) {
-// 		w.Write([]byte(`Welcome to hello!`))
-// 	}
+//	func hello(w http.ResponseWriter, r *http.Request) {
+//		w.Write([]byte(`Welcome to hello!`))
+//	}
 //
-// 	func middleware(next http.Handler) http.Handler {
-// 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-// 		       log.Printf("%s", "Hello from Middleware")
-// 			next.ServeHTTP(rw, r)
-// 		})
-// 	}
+//	func middleware(next http.Handler) http.Handler {
+//		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+//		       log.Printf("%s", "Hello from Middleware")
+//			next.ServeHTTP(rw, r)
+//		})
+//	}
 //
-// 	func main() {
+//	func main() {
 //		m := mux.New()
 //		m.Get("/", index)
 //		m.Get("/hello", hello)
@@ -35,7 +35,7 @@
 //		m.Use(middleware)
 //
 //		log.Fatal(http.ListenAndServe(":8080", m))
-// 	}
+//	}
 //
 // The Muxer matches incoming requests by the method and path and delegates
 // to that assiciated handler.
@@ -46,10 +46,11 @@
 // Path: /foo/bar
 //
 // Requests:
-//  /foo/bar        matches the handler
-//  /foo/bar/       doesn't match, but redirects to /foo/bar
-//  /foo/foo        doesn't match
-//  /foo            doesn't match
+//
+//	/foo/bar        matches the handler
+//	/foo/bar/       doesn't match, but redirects to /foo/bar
+//	/foo/foo        doesn't match
+//	/foo            doesn't match
 package mux
 
 import (
@@ -199,8 +200,8 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Router) wrap(handler http.Handler) http.Handler {
-	for _, mw := range r.middlewares {
-		handler = mw(handler)
+	for i := len(r.middlewares) - 1; i >= 0; i-- {
+		handler = r.middlewares[i](handler)
 	}
 
 	return handler

@@ -216,6 +216,38 @@ func TestNoBeginningSlash(t *testing.T) {
 	m.Delete("bar", h)
 }
 
+func TestMiddlewares(t *testing.T) {
+	used := ""
+
+	mw1 := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			used += "1"
+			next.ServeHTTP(w, r)
+		})
+	}
+
+	mw2 := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			used += "2"
+			next.ServeHTTP(w, r)
+		})
+	}
+
+	m := New()
+	m.Get("/", h)
+	m.Use(mw1)
+	m.Use(mw2)
+
+	res := httptest.NewRecorder()
+	m.ServeHTTP(res, newRequest("GET", "/", nil))
+	if res.Code != http.StatusOK {
+		t.Errorf("for path %q: got code %d; want %d", "/bar", res.Code, http.StatusOK)
+	}
+	if used != "12" {
+		t.Error("Middleware hasn't run yet.")
+	}
+}
+
 func newRequest(method string, path string, body io.Reader) *http.Request {
 	req, err := http.NewRequest(method, path, body)
 	if err != nil {
