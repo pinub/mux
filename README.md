@@ -24,7 +24,7 @@ func hello(w http.ResponseWriter, r *http.Request) {
 
 func middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-        log.Printf("%s", "Hello from Middleware")
+		log.Printf("%s", "Hello from Middleware")
 		next.ServeHTTP(rw, r)
 	})
 }
